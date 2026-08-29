@@ -2,12 +2,14 @@ import { useEffect, useState, useCallback } from 'react';
 import Navbar from '../components/Navbar';
 import EmployeeTable from '../components/EmployeeTable';
 import EmployeeFormModal from '../components/EmployeeFormModal';
+import AdvanceFormModal from '../components/AdvanceFormModal';
 import StatisticsPanel from '../components/StatisticsPanel';
 import {
   getEmployees, addEmployee, updateEmployee, deleteEmployee,
   searchByName, searchByDepartment, searchBySalaryRange, getStatistics,
 } from '../api/employeeApi';
 import { getDepartments } from '../api/departmentApi';
+import { giveAdvance, getOutstandingTotal } from '../api/advanceApi';
 
 export default function Dashboard() {
   const [employees, setEmployees] = useState([]);
@@ -27,6 +29,10 @@ export default function Dashboard() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState(null);
 
+  const [advanceModalOpen, setAdvanceModalOpen] = useState(false);
+  const [advanceEmployee, setAdvanceEmployee] = useState(null);
+  const [advanceTotals, setAdvanceTotals] = useState({});
+
   const loadEmployees = useCallback(async () => {
     setLoading(true);
     setError('');
@@ -42,8 +48,10 @@ export default function Dashboard() {
         res = await getEmployees({ sortBy, order });
       }
       setEmployees(res.data);
+      return res.data;
     } catch (err) {
       setError('Failed to load employees. Is the backend running?');
+      return [];
     } finally {
       setLoading(false);
     }
@@ -67,8 +75,29 @@ export default function Dashboard() {
     }
   }, []);
 
+  const loadAdvanceTotals = useCallback(async (employeeList) => {
+    try {
+      const entries = await Promise.all(
+        employeeList.map(async (emp) => {
+          const res = await getOutstandingTotal(emp.employeeId);
+          return [emp.employeeId, res.data];
+        })
+      );
+      setAdvanceTotals(Object.fromEntries(entries));
+    } catch {
+      // Non-fatal — table just shows ₹0 outstanding for everyone
+    }
+  }, []);
+
   useEffect(() => { loadDepartments(); }, [loadDepartments]);
-  useEffect(() => { loadEmployees(); loadStats(); }, [loadEmployees, loadStats]);
+
+  useEffect(() => {
+    (async () => {
+      const emps = await loadEmployees();
+      loadStats();
+      if (emps.length) loadAdvanceTotals(emps);
+    })();
+  }, [loadEmployees, loadStats, loadAdvanceTotals]);
 
   const handleSortChange = (key, nextOrder) => {
     setSortBy(key);
@@ -92,6 +121,11 @@ export default function Dashboard() {
     setModalOpen(true);
   };
 
+  const openAdvanceModal = (emp) => {
+    setAdvanceEmployee(emp);
+    setAdvanceModalOpen(true);
+  };
+
   const handleSave = async (formData) => {
     if (editingEmployee) {
       await updateEmployee(editingEmployee.employeeId, formData);
@@ -99,16 +133,24 @@ export default function Dashboard() {
       await addEmployee(formData);
     }
     setModalOpen(false);
-    loadEmployees();
+    const emps = await loadEmployees();
     loadStats();
+    if (emps.length) loadAdvanceTotals(emps);
+  };
+
+  const handleGiveAdvance = async (formData) => {
+    await giveAdvance({ ...formData, employeeId: advanceEmployee.employeeId });
+    setAdvanceModalOpen(false);
+    loadAdvanceTotals(employees);
   };
 
   const handleDelete = async (emp) => {
     if (!window.confirm(`Delete employee "${emp.name}"?`)) return;
     try {
       await deleteEmployee(emp.employeeId);
-      loadEmployees();
+      const emps = await loadEmployees();
       loadStats();
+      if (emps.length) loadAdvanceTotals(emps);
     } catch {
       setError('Failed to delete employee.');
     }
@@ -162,6 +204,8 @@ export default function Dashboard() {
             employees={employees}
             onEdit={openEditModal}
             onDelete={handleDelete}
+            onGiveAdvance={openAdvanceModal}
+            advanceTotals={advanceTotals}
             sortBy={sortBy}
             order={order}
             onSortChange={handleSortChange}
@@ -174,6 +218,14 @@ export default function Dashboard() {
             departments={departments}
             onSave={handleSave}
             onClose={() => setModalOpen(false)}
+          />
+        )}
+
+        {advanceModalOpen && (
+          <AdvanceFormModal
+            employee={advanceEmployee}
+            onSave={handleGiveAdvance}
+            onClose={() => setAdvanceModalOpen(false)}
           />
         )}
       </main>
