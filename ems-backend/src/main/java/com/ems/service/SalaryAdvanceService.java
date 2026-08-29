@@ -1,7 +1,14 @@
+package com.ems.service;
+
+import com.ems.dto.AdvanceRequestDTO;
+import com.ems.dto.AdvanceResponseDTO;
+
+import java.util.List;
+
 public interface SalaryAdvanceService {
     AdvanceResponseDTO giveAdvance(AdvanceRequestDTO request);
-    List<AdvanceResponseDTO> getOutstandingAdvances();               // all pending, any employee
+    List<AdvanceResponseDTO> getOutstandingAdvances();
     List<AdvanceResponseDTO> getOutstandingForEmployee(Long employeeId);
-    double getOutstandingTotal(Long employeeId);                     // used in payroll calc
-    AdvanceResponseDTO recordDeduction(Long advanceId, double amount); // called at month-end payroll run
+    double getOutstandingTotal(Long employeeId);
+    AdvanceResponseDTO recordDeduction(Long advanceId, double amount);
 }
