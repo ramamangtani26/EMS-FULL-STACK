@@ -140,4 +140,4 @@ This project is open source and available for learning purposes.
 ## 👤 Author
 
 **Rama Mangtani**
-B.Tech CSE (Gaming Specialization), VIT — 2023–2027
+
