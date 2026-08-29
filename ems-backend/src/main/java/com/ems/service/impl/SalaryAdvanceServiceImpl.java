@@ -62,6 +62,14 @@ public class SalaryAdvanceServiceImpl implements SalaryAdvanceService {
                 .mapToDouble(a -> a.getAmount() - a.getAmountRecovered())
                 .sum();
     }
+    @Override
+    @Transactional
+    public void deleteAdvance(Long advanceId) {
+        if (!advanceRepository.existsById(advanceId)) {
+            throw new AdvanceNotFoundException("Advance with ID: " + advanceId + " not found");
+        }
+        advanceRepository.deleteById(advanceId);
+    }
 
     @Override
     @Transactional
