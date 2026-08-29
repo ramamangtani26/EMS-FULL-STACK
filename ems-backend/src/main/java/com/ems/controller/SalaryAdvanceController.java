@@ -32,6 +32,12 @@ public class SalaryAdvanceController {
     public ResponseEntity<List<AdvanceResponseDTO>> getOutstanding() {
         return ResponseEntity.ok(advanceService.getOutstandingAdvances());
     }
+    @Operation(summary = "Delete an advance record")
+    @DeleteMapping("/{advanceId}")
+    public ResponseEntity<Void> deleteAdvance(@PathVariable Long advanceId) {
+        advanceService.deleteAdvance(advanceId);
+        return ResponseEntity.noContent().build();
+    }
 
     @Operation(summary = "Get outstanding advances for one employee")
     @GetMapping("/employee/{employeeId}")
