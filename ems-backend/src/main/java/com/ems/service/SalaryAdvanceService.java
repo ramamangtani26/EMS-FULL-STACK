@@ -4,6 +4,7 @@ import com.ems.dto.AdvanceRequestDTO;
 import com.ems.dto.AdvanceResponseDTO;
 
 import java.util.List;
+void deleteAdvance(Long advanceId);
 
 public interface SalaryAdvanceService {
     AdvanceResponseDTO giveAdvance(AdvanceRequestDTO request);
