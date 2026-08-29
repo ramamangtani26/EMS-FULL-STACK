@@ -1,10 +1,12 @@
-export default function EmployeeTable({ employees, onEdit, onDelete, sortBy, order, onSortChange }) {
+export default function EmployeeTable({ employees, onEdit, onDelete, onGiveAdvance, advanceTotals, sortBy, order, onSortChange }) {
   const columns = [
     { key: 'employeeId', label: 'ID', sortable: false },
     { key: 'name', label: 'Name', sortable: true },
     { key: 'emailId', label: 'Email', sortable: false },
     { key: 'department', label: 'Department', sortable: false },
     { key: 'salary', label: 'Salary', sortable: true },
+    { key: 'outstanding', label: 'Outstanding Advance', sortable: false },
+    { key: 'netPayable', label: 'Net Payable', sortable: false },
     { key: 'joiningDate', label: 'Joining Date', sortable: true },
   ];
 
@@ -37,20 +39,27 @@ export default function EmployeeTable({ employees, onEdit, onDelete, sortBy, ord
           </tr>
         </thead>
         <tbody>
-          {employees.map((emp) => (
-            <tr key={emp.employeeId}>
-              <td>{emp.employeeId}</td>
-              <td>{emp.name}</td>
-              <td>{emp.emailId}</td>
-              <td>{emp.department?.departmentName}</td>
-              <td>₹{emp.salary.toLocaleString()}</td>
-              <td>{emp.joiningDate}</td>
-              <td className="actions-cell">
-                <button className="btn btn-small" onClick={() => onEdit(emp)}>Edit</button>
-                <button className="btn btn-small btn-danger" onClick={() => onDelete(emp)}>Delete</button>
-              </td>
-            </tr>
-          ))}
+          {employees.map((emp) => {
+            const outstanding = advanceTotals?.[emp.employeeId] ?? 0;
+            const netPayable = emp.salary - outstanding;
+            return (
+              <tr key={emp.employeeId}>
+                <td>{emp.employeeId}</td>
+                <td>{emp.name}</td>
+                <td>{emp.emailId}</td>
+                <td>{emp.department?.departmentName}</td>
+                <td>₹{emp.salary.toLocaleString()}</td>
+                <td>₹{outstanding.toLocaleString()}</td>
+                <td>₹{netPayable.toLocaleString()}</td>
+                <td>{emp.joiningDate}</td>
+                <td className="actions-cell">
+                  <button className="btn btn-small" onClick={() => onEdit(emp)}>Edit</button>
+                  <button className="btn btn-small" onClick={() => onGiveAdvance(emp)}>Give Advance</button>
+                  <button className="btn btn-small btn-danger" onClick={() => onDelete(emp)}>Delete</button>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
